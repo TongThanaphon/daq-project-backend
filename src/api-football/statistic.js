@@ -1,9 +1,11 @@
 const unirest = require("unirest");
 const mysql = require("mysql");
+const util = require("util");
 const dbConfig = require("../config/dbconfig");
 const apiConfig = require("../config/apiconfig");
 
 const db = mysql.createConnection(dbConfig.dbOptions);
+const query = util.promisify(db.query).bind(db);
 
 db.connect(() => {
   db.query("select compId from competition", (err, data, fields) => {
@@ -43,8 +45,9 @@ db.connect(() => {
           var passAccurate = json["Passes accurate"];
           var passedPercentage = json["Passes %"];
 
-          db.connect(() => {
-            db.query(`
+          db.connect(async () => {
+            try {
+              query(`
                       insert into statistic (
                           statisticId,
                           shotsOnGoal,
@@ -84,6 +87,9 @@ db.connect(() => {
                           '{"home": "${passedPercentage.home}", "away": "${passedPercentage.away}"}'
                             )
                     `);
+            } finally {
+              db.end();
+            }
           });
         }
       });

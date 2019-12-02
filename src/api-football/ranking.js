@@ -1,10 +1,12 @@
 const unirest = require("unirest");
 const mysql = require("mysql");
+const util = require("util");
 const dbConfig = require("../config/dbconfig");
 const apiConfig = require("../config/apiconfig");
 
 const leagueId = ["524", "2", "37", "56"];
 const db = mysql.createConnection(dbConfig.dbOptions);
+const query = util.promisify(db.query).bind(db);
 
 leagueId.map(id => {
   var req = unirest(
@@ -24,11 +26,17 @@ leagueId.map(id => {
 
     json.map(data => {
       var rankId = id + data.rank;
-      db.connect(() => {
-        db.query(`
+      db.connect(async () => {
+        try {
+          await query(`truncate table ranking`);
+
+          await query(`
               insert into ranking (rankId, seasonId, teamId, order, points, goalsDiff, win, lose, draw)
               values ('${rankId}', '${id}', '${data.team_id}', '${data.rank}', '${data.points}', '${data.goalsDiff}', '${data.all.win}', '${data.all.lose}', '${data.all.draw}')
           `);
+        } finally {
+          db.end();
+        }
       });
     });
   });

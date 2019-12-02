@@ -1,10 +1,12 @@
 const unirest = require("unirest");
 const mysql = require("mysql");
+const util = require("util");
 const dbConfig = require("../config/dbconfig");
 const apiConfig = require("../config/apiconfig");
 const leagueId = ["524", "2", "37", "56"];
 
 const db = mysql.createConnection(dbConfig.dbOptions);
+const query = util.promisify(db.query).bind(db);
 
 leagueId.map(id => {
   var req = unirest(
@@ -23,12 +25,18 @@ leagueId.map(id => {
     var json = res.body.api.teams;
 
     json.map(data => {
-      db.connect(() => {
-        db.query(
-          `insert into team (teamId, teamName, teamLogo)
+      db.connect(async () => {
+        try {
+          await query(`truncate table team`);
+
+          await query(
+            `insert into team (teamId, teamName, teamLogo)
           values ('${data.team_id}', '${data.name}', '${data.logo}')
           on duplicate key update teamId = '${data.team_id}'`
-        );
+          );
+        } finally {
+          db.end();
+        }
       });
     });
   });

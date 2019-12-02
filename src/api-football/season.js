@@ -47,6 +47,8 @@ leagueId.map(id => {
           teamIds.push(r.teamId);
         });
 
+        await query(`truncate table season`);
+
         await query(`
           insert into season (seasonId, year, seasonStart, seasonEnd, teams, ranking, matches)
           values ('${id}', '${json[0].season}', '${json[0].season_start}', '${json[0].season_end}', '{"teams": [${teamIds}]}', '{"rankIds": [${rankIds}]}', '{"compIds": [${compIds}]}')

@@ -1,10 +1,12 @@
 const unirest = require("unirest");
 const mysql = require("mysql");
+const util = require("util");
 const dbConfig = require("../config/dbconfig");
 const apiConfig = require("../config/apiconfig");
 
 const leagueId = ["524", "2", "37", "56"];
 const db = mysql.createConnection(dbConfig.dbOptions);
+const query = util.promisify(db.query).bind(db);
 
 leagueId.map(id => {
   var req = unirest(
@@ -21,18 +23,24 @@ leagueId.map(id => {
     "x-rapidapi-key": `${apiConfig.apiKey}`
   });
 
-  req.end(function(res) {
+  req.end(res => {
     if (res.error) throw new Error(res.error);
 
     var json = res.body.api.fixtures;
 
     json.map(data => {
-      db.connect(() => {
-        db.query(`
-      insert into competition (compId, seasonId, eventDate, status, home, away, goals, scores)
-      values ('${data.fixture_id}', '${id}', '${data.event_date}', '${data.status}', '${data.homeTeam.team_id}', 
-      '${data.awayTeam.team_id}', '{"home": "${data.goalsHomeTeam}", "away": "${data.goalsAwayTeam}"}', '${data.score.fulltime}')
-      `);
+      db.connect(async () => {
+        try {
+          await query(`truncate table competition`);
+
+          await query(`
+            insert into competition (compId, seasonId, eventDate, status, home, away, goals, scores)
+            values ('${data.fixture_id}', '${id}', '${data.event_date}', '${data.status}', '${data.homeTeam.team_id}', 
+            '${data.awayTeam.team_id}', '{"home": "${data.goalsHomeTeam}", "away": "${data.goalsAwayTeam}"}', '${data.score.fulltime}')
+            `);
+        } finally {
+          db.end();
+        }
       });
     });
   });
