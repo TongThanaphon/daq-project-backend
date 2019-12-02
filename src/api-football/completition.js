@@ -30,7 +30,8 @@ leagueId.map(id => {
       db.connect(() => {
         db.query(`
       insert into competition (compId, seasonId, eventDate, status, home, away, goals, scores)
-      values ('${data.fixture_id}', '${id}', '${data.event_date}', '${data.status}', '${data.homeTeam.team_id}', '${data.awayTeam.team_id}', '{"home": "${data.goalsHomeTeam}", "away": "${data.goalsAwayTeam}"}', '${data.score.fulltime}')
+      values ('${data.fixture_id}', '${id}', '${data.event_date}', '${data.status}', '${data.homeTeam.team_id}', 
+      '${data.awayTeam.team_id}', '{"home": "${data.goalsHomeTeam}", "away": "${data.goalsAwayTeam}"}', '${data.score.fulltime}')
       `);
       });
     });

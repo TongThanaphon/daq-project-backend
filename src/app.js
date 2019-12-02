@@ -1,6 +1,9 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
+// const swaggerUi = require("swagger-ui-express");
+// const YAML = require("yamljs");
+// const swaggerDocs = YAML.load("./swagger/swagger.yaml");
 
 const app = express();
 
@@ -27,6 +30,7 @@ app.use((req, res, next) => {
   next();
 });
 
+// app.use("/swagger-api", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.use("/team", teamRoutes);
 app.use("/season", seasonRoutes);
 
